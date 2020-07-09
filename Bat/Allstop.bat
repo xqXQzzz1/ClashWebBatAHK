@@ -1,0 +1,1 @@
+taskkill /IM  ClashWeb.exe /F>NUL 2>NUL
