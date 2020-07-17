@@ -30,7 +30,6 @@ Menu, Submenu2, Add, 开启系统代理, setsys
 Menu, Submenu2, Add, 关闭系统代理, dissys
 Menu, tray, add, 系统代理, :Submenu2
 
-
 Menu, Submenu1, Add, 更新geoIP, updategeoIP
 Menu, Submenu1, Add, UWP设置, UWPProxy 
 Menu, Submenu1, Add, 开机启动, StartUp
@@ -106,6 +105,7 @@ SetConfig:
     LV_ModifyCol(2,"100 Integer") ; 为了进行排序, 指出列 2 是整数.
     ; 显示窗口并返回. 每当用户点击一行时脚本会发出通知.
     Gui, Show
+    
 return
 
 配置管理:
@@ -128,10 +128,12 @@ return
 
 GuiClose:
     Gui, Destroy
+    
 return
 
 UWPProxy:
     RunWait, %A_ScriptDir%\Bat\UWP.bat,,Hide
+    
 return
 
 updategeoIP:
@@ -169,6 +171,7 @@ checkclash:
         ProxyVar := "关-❌"
     }
     TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`n推荐 状态：开-开
+    
 return
 
 MenuHandlerstartclash:
@@ -201,10 +204,12 @@ return
 
 StartUp:
     RunWait, %A_ScriptDir%\Bat\StartUp.bat
+    
 return
 
 DeleteStartUp:
     RunWait, %A_ScriptDir%\Bat\DeleteStartUp.bat
+    
 Return
 
 OpenWebBoard:
@@ -218,6 +223,7 @@ OpenWebBoard:
         ClashVar := "关-❌"
         TrayTip % Format("📢打开失败📢"),Clash：%ClashVar%`n请先启动Clash
     }
+    
 return
 
 MenuHandlerexit:

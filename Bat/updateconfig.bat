@@ -26,7 +26,7 @@ for /f "eol=# eol=; tokens=1,* delims==" %%i in (pref.ini) do (
 )
 :next2
 cd .\App
-wget -O ..\Profile\%configname% "%URL%"
+curl -o ..\Profile\%configname% "%URL%"
 cd ..\Profile
 ren %configname% _temp.yaml
 echo # "%URL%">%configname%
