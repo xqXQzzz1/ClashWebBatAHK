@@ -141,6 +141,11 @@ updategeoIP:
     Goto, MenuHandlerrestartclash
 return
 
+updateipgeoIP:
+    RunWait, %A_ScriptDir%\Bat\ipipgeoIP.bat
+    Goto, MenuHandlerrestartclash
+return
+
 setsys:
     RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
     Goto, checkclash
@@ -232,6 +237,5 @@ MenuHandlerexit:
 return ; 如果选择 No, 脚本将会终止.
 RunWait, %A_ScriptDir%\Bat\stop.bat,,Hide
 gosub, checkclash
-RunWait, %A_ScriptDir%\Bat\Allstop.bat,,Hide
 ExitApp
 
