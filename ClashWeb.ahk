@@ -88,7 +88,7 @@ cancledefaultTap:
 return
 
 MenuHandlerStartTap:
-    gosub, StartTap
+    IniWrite, true, pref.ini, profile, tapcurrentState
     gosub, MenuHandlerrestartclash
 return
 
@@ -102,7 +102,6 @@ StartTap:
     IniRead, configName, pref.ini, profile, configname, Default
     RunWait, %A_ScriptDir%\App\tap\tapstart.bat,,Hide
     RunWait, %A_ScriptDir%\Bat\settapconfig.bat %configName%,,Hide
-    
 return
 
 DeleteTap:
@@ -221,8 +220,9 @@ checkclash:
     else{
         ; gosub, StartTap
         TapVar := "开-✅"
-    } 
-    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n
+    }
+    IniRead, configName, pref.ini, profile, configname, Default
+    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n当前配置：%configName%
     
 return
 
