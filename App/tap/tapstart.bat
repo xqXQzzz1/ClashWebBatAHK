@@ -7,4 +7,3 @@ start  /b clashtun2socks.exe --tundev "tap0901:clash-tap:10.0.0.2:10.0.0.0:255.2
 netsh interface ip add route 0.0.0.0/0 %DEVICE_NAME% 10.0.0.1 metric=0 store=active
 netsh interface ipv6 add route ::/0 %DEVICE_NAME% fdfe:dcba:9876::1 metric=0 store=active
 ipconfig /flushdns
-pause

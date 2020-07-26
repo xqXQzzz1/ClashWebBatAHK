@@ -30,8 +30,10 @@ Menu, Submenu3, Add, 选择配置, SetConfig
 Menu, Submenu3, Add, 添加配置, Url
 Menu, tray, add, 配置管理, :Submenu3
 
-Menu, Submenu4, Add, 启动TAP, StartTap
-Menu, Submenu4, Add, 取消TAP, DeleteTap
+Menu, Submenu4, Add, 启动TAP, MenuHandlerStartTap
+Menu, Submenu4, Add, 取消TAP, MenuHandlerDeleteTap
+Menu, Submenu4, Add, 默认启动, defaultTap
+Menu, Submenu4, Add, 取消默认, cancledefaultTap
 Menu, tray, add, TAP管理, :Submenu4 
 
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
@@ -75,13 +77,40 @@ return
 nothing:
 return
 
+defaultTap:
+    IniWrite, true, pref.ini, profile, defaulttap
+    goto, MenuHandlerStartTap
+return
+
+cancledefaultTap:
+    IniWrite, false, pref.ini, profile, defaulttap
+    goto, MenuHandlerDeleteTap
+return
+
+MenuHandlerStartTap:
+    gosub, StartTap
+    gosub, MenuHandlerrestartclash
+return
+
+MenuHandlerDeleteTap:
+    gosub, DeleteTap
+    gosub, MenuHandlerrestartclash
+return
+
 StartTap:
+    IniWrite, true, pref.ini, profile, tapcurrentState
+    IniRead, configName, pref.ini, profile, configname, Default
     RunWait, %A_ScriptDir%\App\tap\tapstart.bat,,Hide
-    goto, MenuHandlerrestartclash
+    RunWait, %A_ScriptDir%\Bat\settapconfig.bat %configName%,,Hide
+    
 return
 
 DeleteTap:
+    IniWrite, false, pref.ini, profile, tapcurrentState
+    IniRead, configName, pref.ini, profile, configname, Default 
     RunWait, %A_ScriptDir%\App\tap\tapstop.bat,,Hide
+    FileDelete, Profile\tap\tap_%configname%
+    FileDelete, Profile\selection\tap_%configname%.dat 
 return
 
 Url:
@@ -118,7 +147,6 @@ SetConfig:
     LV_ModifyCol(2,"100 Integer") ; 为了进行排序, 指出列 2 是整数.
     ; 显示窗口并返回. 每当用户点击一行时脚本会发出通知.
     Gui, Show
-    
 return
 
 配置管理:
@@ -140,12 +168,11 @@ return
 return
 
 GuiClose:
-    Gui, Destroy  
+    Gui, Destroy 
 return
 
 UWPProxy:
     RunWait, %A_ScriptDir%\Bat\UWP.bat,,Hide
-    
 return
 
 updategeoIP:
@@ -187,39 +214,78 @@ checkclash:
     {
         ProxyVar := "关-❌"
     }
-    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`n推荐 状态：开-开
+    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    If (%tapState% <> True And %tapState%<>true){
+        TapVar := "关-❌"
+    }
+    else{
+        ; gosub, StartTap
+        TapVar := "开-✅"
+    } 
+    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n
     
 return
 
 MenuHandlerstartclash:
-    IniRead, configName, pref.ini, profile, configname, Default
-    FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
-    If configSize
-        RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
-    else 
-        RunWait, %A_ScriptDir%\Bat\defaultstart.bat,,Hide
-    goto, setsys
+    Process,Exist, clash-win64.exe ;                         
+    if ErrorLevel
+    { 
+        MsgBox, 4,, clash已启动！
+    }
+    else
+    {
+        IniRead, configName, pref.ini, profile, configname, Default
+        IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+        If (%tapState% <> True And %tapState%<>true){
+            FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
+            If configSize
+                RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
+            else 
+                RunWait, %A_ScriptDir%\Bat\defaultstart.bat defaultconfig,,Hide
+            goto, setsys
+        }
+        else{
+            gosub, StartTap
+            FileGetSize, configSize, %A_ScriptDir%\Profile\tap\tap_%configName%, K
+            If configSize
+                RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName%,,Hide
+            else 
+                RunWait, %A_ScriptDir%\Bat\defaultstart.bat tapdefault,,Hide
+            goto, dissys
+        } 
+    }
 return
 
 MenuHandlerstopclash:
-    MsgBox, 4,, 确定要关闭Clash、关闭系统代理吗？
-    IfMsgBox, No
-return ; 如果选择 No, 脚本将会终止.
-gosub, deleteTap
-IniRead, configName, pref.ini, profile, configname, Default
-RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
-Gosub, checkclash
+    IniRead, configName, pref.ini, profile, configname, Default
+    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    If (%tapState% <> True And %tapState%<>true){
+        RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+    }
+    else{
+        ; gosub, StartTap
+        RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+    } 
+    gosub, DeleteTap
+    IniRead, tapState1, pref.ini, profile, defaulttap, Default
+    IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
 return
 
 MenuHandlerrestartclash:
-    gosub, deleteTap
     IniRead, configName, pref.ini, profile, configname, Default
-    RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
-    goto, MenuHandlerstartclash
+    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    If (%tapState% <> True And %tapState%<>true){
+        RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+    }
+    else{
+        ; gosub, StartTap
+        RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+    } 
+    gosub, MenuHandlerstartclash
 return
 
 Updateconfig:
-    IniRead, subconverterName, pref.ini, profile, sub, Default
+    IniRead, subconverterName, pref.ini, own, sub, Default
     IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
     IniRead, configName, pref.ini, profile, configname, Default
     RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,Hide
@@ -249,6 +315,7 @@ OpenWebBoard:
 return
 
 MenuHandlerexit:
-    gosub,MenuHandlerstopclash
+    gosub, MenuHandlerstopclash
+    Gosub, checkclash
 ExitApp
 
