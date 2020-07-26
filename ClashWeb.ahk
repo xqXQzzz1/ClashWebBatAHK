@@ -12,13 +12,9 @@ Menu, Tray, Icon, clash-logo.ico,1,1
 Menu, Tray, NoStandard
 
 #Persistent ; 让脚本持续运行, 直到用户退出.
-Menu, Tray, Add ; 创建分隔线.'
 Menu, tray, Add, 切换节点, OpenWebBoard 
 Menu, tray, Add, 更新配置, Updateconfig
 
-Menu, Submenu4, Add, 选择配置, SetConfig
-Menu, Submenu4, Add, 添加配置, Url
-Menu, tray, add, 配置管理, :Submenu4 
 Menu, Tray, Add ; 创建分隔线.'
 
 Menu, Submenu, Add, 启动Clash, MenuHandlerstartclash
@@ -30,7 +26,16 @@ Menu, Submenu2, Add, 开启系统代理, setsys
 Menu, Submenu2, Add, 关闭系统代理, dissys
 Menu, tray, add, 系统代理, :Submenu2
 
-Menu, Submenu1, Add, 更新geoIP, updategeoIP
+Menu, Submenu3, Add, 选择配置, SetConfig
+Menu, Submenu3, Add, 添加配置, Url
+Menu, tray, add, 配置管理, :Submenu3
+
+Menu, Submenu4, Add, 启动TAP, StartTap
+Menu, Submenu4, Add, 取消TAP, DeleteTap
+Menu, tray, add, TAP管理, :Submenu4 
+
+Menu, Submenu1, Add, 原版geoIP, updategeoIP
+Menu, Submenu1, Add, IPIPgeoIP, updateipgeoIP
 Menu, Submenu1, Add, UWP设置, UWPProxy 
 Menu, Submenu1, Add, 开机启动, StartUp
 Menu, Submenu1, Add, 关闭启动, DeleteStartUp
@@ -70,6 +75,15 @@ return
 nothing:
 return
 
+StartTap:
+    RunWait, %A_ScriptDir%\App\tap\tapstart.bat,,Hide
+    goto, MenuHandlerrestartclash
+return
+
+DeleteTap:
+    RunWait, %A_ScriptDir%\App\tap\tapstop.bat,,Hide
+return
+
 Url:
     Gui, Destroy
     Gui, Add, Text,, 订阅链接:
@@ -87,8 +101,7 @@ Button更新:
         IniWrite, %subName%.yaml, pref.ini, profile, configname
     }
     Gui, Destroy
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat
-    Goto, MenuHandlerrestartclash
+    goto, Updateconfig
 return
 
 SetConfig:
@@ -127,8 +140,7 @@ return
 return
 
 GuiClose:
-    Gui, Destroy
-    
+    Gui, Destroy  
 return
 
 UWPProxy:
@@ -183,8 +195,8 @@ MenuHandlerstartclash:
     IniRead, configName, pref.ini, profile, configname, Default
     FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
     If configSize
-        RunWait, %A_ScriptDir%\Bat\startclash.bat,,Hide
-    else
+        RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
+    else 
         RunWait, %A_ScriptDir%\Bat\defaultstart.bat,,Hide
     goto, setsys
 return
@@ -193,28 +205,33 @@ MenuHandlerstopclash:
     MsgBox, 4,, 确定要关闭Clash、关闭系统代理吗？
     IfMsgBox, No
 return ; 如果选择 No, 脚本将会终止.
-RunWait, %A_ScriptDir%\Bat\stop.bat,,Hide
-Goto, checkclash
+gosub, deleteTap
+IniRead, configName, pref.ini, profile, configname, Default
+RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+Gosub, checkclash
 return
 
 MenuHandlerrestartclash:
-    RunWait, %A_ScriptDir%\Bat\stop.bat,,Hide
+    gosub, deleteTap
+    IniRead, configName, pref.ini, profile, configname, Default
+    RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
     goto, MenuHandlerstartclash
 return
 
 Updateconfig:
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat,,Hide
+    IniRead, subconverterName, pref.ini, profile, sub, Default
+    IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
+    IniRead, configName, pref.ini, profile, configname, Default
+    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,Hide
     Goto, MenuHandlerrestartclash
 return
 
 StartUp:
-    RunWait, %A_ScriptDir%\Bat\StartUp.bat
-    
+    RunWait, %A_ScriptDir%\Bat\StartUp.bat 
 return
 
 DeleteStartUp:
-    RunWait, %A_ScriptDir%\Bat\DeleteStartUp.bat
-    
+    RunWait, %A_ScriptDir%\Bat\DeleteStartUp.bat 
 Return
 
 OpenWebBoard:
@@ -232,10 +249,6 @@ OpenWebBoard:
 return
 
 MenuHandlerexit:
-    MsgBox, 4,, 确定要关闭Clash、关闭系统代理吗？
-    IfMsgBox, No
-return ; 如果选择 No, 脚本将会终止.
-RunWait, %A_ScriptDir%\Bat\stop.bat,,Hide
-gosub, checkclash
+    gosub,MenuHandlerstopclash
 ExitApp
 
