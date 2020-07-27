@@ -268,7 +268,7 @@ MenuHandlerstartclash:
         }
         else{
             gosub, StartTap
-            FileGetSize, configSize, %A_ScriptDir%\Profile\tap\tap_%configName%, K
+            FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
             If configSize
                 RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName%,,Hide
             else 
