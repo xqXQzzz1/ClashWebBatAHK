@@ -193,6 +193,7 @@ SelectConfigs:
                     FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
                     FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
                     FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
+                    goto, SetConfig
                 } 
             }
         }
@@ -203,6 +204,7 @@ SelectConfigs:
         LV_GetText(Urltext, A_EventInfo, 3)
         If (%A_EventInfo%<>0){
             Run, open "%A_ScriptDir%\Profile\%NameText%"
+            goto, SetConfig
         }
     }
 return
