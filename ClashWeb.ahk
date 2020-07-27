@@ -31,9 +31,11 @@ Menu, Submenu3, Add, 添加配置, Url
 Menu, tray, add, 配置管理, :Submenu3
 
 Menu, Submenu4, Add, 启动TAP, MenuHandlerStartTap
-Menu, Submenu4, Add, 取消TAP, MenuHandlerDeleteTap
 Menu, Submenu4, Add, 默认启动, defaultTap
+Menu, Submenu4, Add, 添加TAP, MenuHandlerAddTap
+Menu, Submenu4, Add, 卸载TAP, MenuHandlerUninstallTap
 Menu, Submenu4, Add, 取消默认, cancledefaultTap
+Menu, Submenu4, Add, 取消TAP, MenuHandlerDeleteTap
 Menu, tray, add, TAP管理, :Submenu4 
 
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
@@ -77,6 +79,19 @@ return
 nothing:
 return
 
+MenuHandlerUninstallTap:
+    gosub, DeleteTap
+    FileGetSize, UninstallSize, C:\Program Files\TAP-Windows\Uninstall.exe, K
+    If UninstallSize
+        RunWait, C:\Program Files\TAP-Windows\Uninstall.exe,,Hide
+    IniWrite, false, pref.ini, profile, tapdevState
+return
+
+MenuHandlerAddTap:
+    RunWait, %A_ScriptDir%\App\tap\add_tap_device.bat,,
+    IniWrite, true, pref.ini, profile, tapdevState
+return
+
 defaultTap:
     IniWrite, true, pref.ini, profile, defaulttap
     goto, MenuHandlerStartTap
@@ -100,6 +115,10 @@ return
 StartTap:
     IniWrite, true, pref.ini, profile, tapcurrentState
     IniRead, configName, pref.ini, profile, configname, Default
+    IniRead, devstate, pref.ini, profile, tapdevState, Default
+    If (%devstate% <> True And %devstate%<>true){
+        gosub, MenuHandlerAddTap
+    } 
     RunWait, %A_ScriptDir%\App\tap\tapstart.bat,,Hide
     RunWait, %A_ScriptDir%\Bat\settapconfig.bat %configName%,,Hide
 return
@@ -185,7 +204,10 @@ updateipgeoIP:
 return
 
 setsys:
-    RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
+    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    If (%tapState% <> True And %tapState%<>true){
+        RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
+    }
     Goto, checkclash
 return
 
@@ -266,8 +288,10 @@ MenuHandlerstopclash:
         ; gosub, StartTap
         RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
     } 
-    gosub, DeleteTap
     IniRead, tapState1, pref.ini, profile, defaulttap, Default
+    If (%tapState1% <> True And %tapState1%<>true){
+        gosub, DeleteTap
+    }
     IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
 return
 
@@ -278,7 +302,6 @@ MenuHandlerrestartclash:
         RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
     }
     else{
-        ; gosub, StartTap
         RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
     } 
     gosub, MenuHandlerstartclash

@@ -1,4 +1,5 @@
 @echo off
+cd App\tap
 setlocal
 
 set DEVICE_NAME=clash-tap
@@ -99,4 +100,7 @@ if %errorlevel% neq 0 (
 )
 
 echo TAP network device added and configured successfully 
+netsh interface ip add route 0.0.0.0/0 %DEVICE_NAME% 10.0.0.1 metric=0 store=active
+netsh interface ipv6 add route ::/0 %DEVICE_NAME% fdfe:dcba:9876::1 metric=0 store=active
+ipconfig /flushdns
 exit /b 0
