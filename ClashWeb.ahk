@@ -153,7 +153,7 @@ return
 
 SetConfig:
     Gui, Destroy
-    Gui, Add, ListView,w700 g配置管理, Name|Size (KB)|URL
+    Gui, Add, ListView,w700 Multi AltSubmit gSelectConfigs, Name|Size (KB)|URL
     Loop, Profile\*.yaml
     {
         FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
@@ -167,20 +167,42 @@ SetConfig:
     Gui, Show
 return
 
-配置管理:
+SelectConfigs:
     if A_GuiEvent = DoubleClick
     {
         LV_GetText(NameText, A_EventInfo) ; 从行的第一个字段中获取文本.
         LV_GetText(Urltext, A_EventInfo, 3)
         If (%A_EventInfo%<>0){
-            
-            IniWrite, %NameText%, pref.ini, profile, configname
-            IniWrite, %UrlText%, pref.ini, profile, currentUrl
-            MsgBox, 4,, 选中配置：%NameText%，是否重启clash？
+            MsgBox, 3,, "是"：应用当前配置并重启clash`n"否"：删除当前配置
+            IfMsgBox, Yes
+            {
+                IniWrite, %NameText%, pref.ini, profile, configname
+                IniWrite, %UrlText%, pref.ini, profile, currentUrl
+                MsgBox, 4,, 选中配置：%NameText%，是否重启clash？
+                IfMsgBox, No
+                return ; 如果选择 No, 脚本将会终止.
+                Gui, Destroy
+                goto, MenuHandlerrestartclash
+            }
             IfMsgBox, No
-            return ; 如果选择 No, 脚本将会终止.
-            Gui, Destroy
-            goto, MenuHandlerrestartclash
+            {
+                MsgBox, 4,, 当前配置:%NameText%，是否删除
+                IfMsgBox, Yes
+                {
+                    FileDelete, %A_ScriptDir%\Profile\%NameText%
+                    FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
+                    FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
+                    FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
+                } 
+            }
+        }
+    } 
+    if A_GuiEvent = RightClick
+    {
+        LV_GetText(NameText, A_EventInfo) ; 从行的第一个字段中获取文本.
+        LV_GetText(Urltext, A_EventInfo, 3)
+        If (%A_EventInfo%<>0){
+            Run, open "%A_ScriptDir%\Profile\%NameText%"
         }
     }
 return
@@ -279,20 +301,24 @@ MenuHandlerstartclash:
 return
 
 MenuHandlerstopclash:
-    IniRead, configName, pref.ini, profile, configname, Default
-    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-    If (%tapState% <> True And %tapState%<>true){
-        RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+    MsgBox, 4,, 是否关闭clash和系统应用
+    IfMsgBox, Yes
+    {
+        IniRead, configName, pref.ini, profile, configname, Default
+        IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+        If (%tapState% <> True And %tapState%<>true){
+            RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+        }
+        else{
+            ; gosub, StartTap
+            RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+        } 
+        IniRead, tapState1, pref.ini, profile, defaulttap, Default
+        If (%tapState1% <> True And %tapState1%<>true){
+            gosub, DeleteTap
+        }
+        IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
     }
-    else{
-        ; gosub, StartTap
-        RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
-    } 
-    IniRead, tapState1, pref.ini, profile, defaulttap, Default
-    If (%tapState1% <> True And %tapState1%<>true){
-        gosub, DeleteTap
-    }
-    IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
 return
 
 MenuHandlerrestartclash:
@@ -338,7 +364,23 @@ OpenWebBoard:
 return
 
 MenuHandlerexit:
-    gosub, MenuHandlerstopclash
-    Gosub, checkclash
+    MsgBox, 4,, 是否退出
+    IfMsgBox, No
+return
+IniRead, configName, pref.ini, profile, configname, Default
+IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+If (%tapState% <> True And %tapState%<>true){
+    RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+}
+else{
+    ; gosub, StartTap
+    RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+} 
+IniRead, tapState1, pref.ini, profile, defaulttap, Default
+If (%tapState1% <> True And %tapState1%<>true){
+    gosub, DeleteTap
+}
+IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
+Gosub, checkclash
 ExitApp
 
