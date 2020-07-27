@@ -1,0 +1,1 @@
+CreateObject("WScript.Shell").Run "subconverter.exe -cfw -f .\pref-acl4ssr.yml",1

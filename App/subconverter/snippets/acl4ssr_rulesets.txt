@@ -1,0 +1,30 @@
+;🎯 全球直连,rules/LocalAreaNetwork.list
+🎯 全球直连,rules/ACL4SSR/Clash/LocalAreaNetwork.list
+; 普通广告拦截，只包含广告联盟，推荐加上，不影响使用
+🛑 全球拦截,rules/ACL4SSR/Clash/BanAD.list
+; 应用广告拦截 不推荐加入 可能会产生副作用
+🍃 应用净化,rules/ACL4SSR/Clash/BanProgramAD.list
+;🛑 全球拦截,rules/NobyDa/Surge/AdRule.list
+;🛑 全球拦截,rules/ConnersHua/Surge/Ruleset/Hijacking.list
+
+Ⓜ️ 微软服务,rules/ACL4SSR/Clash/Microsoft.list
+🍎 苹果服务,rules/ACL4SSR/Clash/Apple.list
+;🍎 苹果服务,rules/ConnersHua/Surge/Ruleset/Apple.list
+;🎥 NETFLIX,rules/ConnersHua/Surge/Ruleset/Media/Netflix.list
+🌍 国外媒体,rules/ConnersHua/Surge/Ruleset/GlobalMedia.list
+;🌏 国内媒体,rules/lhie1/Surge3/AsianTV.list
+📲 电报信息,rules/ConnersHua/Surge/Ruleset/Telegram.list
+;🚀 节点选择,rules/ConnersHua/Surge/Ruleset/Global.list
+;🚀 节点选择,rules/ACL4SSR/Clash/ProxyGFWlist.list
+🚀 节点选择,rules/ACL4SSR/Clash/ProxyLite.list
+;🎯 全球直连,rules/ConnersHua/Surge/Ruleset/China.list
+;🎯 全球直连,rules/NobyDa/Surge/Download.list
+;🎯 全球直连,rules/ConnersHua/Surge/Ruleset/Unbreak.list
+;🎯 全球直连,rules/ConnersHua/Surge/Ruleset/China.list
+;🎯 全球直连,rules/NobyDa/Surge/Download.list
+;🎯 全球直连,rules/ACL4SSR/Clash/ChinaIp.list
+;🎯 全球直连,rules/ACL4SSR/Clash/Apple.list
+🎯 全球直连,rules/ACL4SSR/Clash/ChinaDomain.list
+🎯 全球直连,rules/ACL4SSR/Clash/ChinaCompanyIp.list
+🎯 全球直连,[]GEOIP,CN
+🐟 漏网之鱼,[]FINAL
