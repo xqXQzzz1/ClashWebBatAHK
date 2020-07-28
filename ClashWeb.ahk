@@ -209,7 +209,6 @@ SelectConfigs:
                 IfMsgBox, No
                 return ; 如果选择 No, 脚本将会终止.
                 gosub, MenuHandlerrestartclash
-                goto,SetConfig
             }
             IfMsgBox, No
             {
@@ -220,7 +219,6 @@ SelectConfigs:
                     FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
                     FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
                     FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
-                    goto, SetConfig
                 } 
             }
         }
