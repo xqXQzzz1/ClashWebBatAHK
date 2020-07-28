@@ -14,7 +14,7 @@ Menu, Tray, NoStandard
 #Persistent ; 让脚本持续运行, 直到用户退出.
 Menu, tray, Add, 切换节点, OpenWebBoard 
 Menu, tray, Add, 更新配置, Updateconfig
-
+Menu, tray, Add, 选择配置, SetConfig
 Menu, Tray, Add ; 创建分隔线.'
 
 Menu, Submenu, Add, 启动Clash, MenuHandlerstartclash
@@ -26,9 +26,9 @@ Menu, Submenu2, Add, 开启系统代理, setsys
 Menu, Submenu2, Add, 关闭系统代理, dissys
 Menu, tray, add, 系统代理, :Submenu2
 
-Menu, Submenu3, Add, 选择配置, SetConfig
-Menu, Submenu3, Add, 添加配置, Url
-Menu, tray, add, 配置管理, :Submenu3
+; Menu, Submenu3, Add, 选择配置, SetConfig
+; Menu, Submenu3, Add, 添加配置, Url
+; Menu, tray, add, 配置管理, :Submenu3
 
 Menu, Submenu4, Add, 启动TAP, MenuHandlerStartTap
 Menu, Submenu4, Add, 默认启动, defaultTap
@@ -132,28 +132,55 @@ DeleteTap:
 return
 
 Url:
-    Gui, Destroy
-    Gui, Add, Text,, 订阅链接:
-    Gui, Add, Edit,w500 vsubUrl
-    Gui, Add, Text,, 配置名称:
-    Gui, Add, Edit,w500 vsubName
-    Gui, Add, Button, Default, 更新
-    Gui, Show
+    Gui, Sub:Destroy
+    Gui, Sub:Add, Text,, 订阅链接:
+    Gui, Sub:Add, Edit,w500 vsubUrl
+    Gui, Sub:Add, Text,, 配置名称:
+    Gui, Sub:Add, Edit,w500 vsubName
+    Gui, Sub:Add, Button, Default, 保存
+    Gui, Sub:Show,,clash配置添加
 return
 
-Button更新:
-    Gui, Submit
+SubGuiclose:
+    Gui, Sub:Destroy
+return
+
+SubButton保存:
+    Gui, Sub:Submit
     If (subUrl <> "" And subName <> ""){
         IniWrite, "%subUrl%", pref.ini, profile, currentUrl
         IniWrite, %subName%.yaml, pref.ini, profile, configname
     }
-    Gui, Destroy
-    goto, Updateconfig
+    gosub, Updateconfig
+    Gui, Sub:Destroy
+return
+Button订阅转换:
+    Run, %A_ScriptDir%\Profile\sub-web\index.html
+return
+
+Button添加:
+    Goto,Url
+return
+
+Button打开目录:
+    Run, %A_ScriptDir%\Profile
+return
+Button刷新:
+    goto,SetConfig
+return
+
+GuiClose:
+    Gui, Destroy 
 return
 
 SetConfig:
     Gui, Destroy
+    Gui, Add, Text,, 双击应用或删除，右键单击打开配置文件
     Gui, Add, ListView,w700 Multi AltSubmit gSelectConfigs, Name|Size (KB)|URL
+    Gui, Add, Button, Default w80, 添加
+    Gui, Add, Button, xp+100 yp w80, 刷新
+    Gui, Add, Button, xp+100 yp w80, 订阅转换
+    Gui, Add, Button, xp+100 yp w80, 打开目录
     Loop, Profile\*.yaml
     {
         FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
@@ -181,8 +208,8 @@ SelectConfigs:
                 MsgBox, 4,, 选中配置：%NameText%，是否重启clash？
                 IfMsgBox, No
                 return ; 如果选择 No, 脚本将会终止.
-                Gui, Destroy
-                goto, MenuHandlerrestartclash
+                gosub, MenuHandlerrestartclash
+                goto,SetConfig
             }
             IfMsgBox, No
             {
@@ -204,13 +231,8 @@ SelectConfigs:
         LV_GetText(Urltext, A_EventInfo, 3)
         If (%A_EventInfo%<>0){
             Run, open "%A_ScriptDir%\Profile\%NameText%"
-            goto, SetConfig
         }
     }
-return
-
-GuiClose:
-    Gui, Destroy 
 return
 
 UWPProxy:
@@ -272,6 +294,7 @@ checkclash:
     
 return
 
+
 MenuHandlerstartclash:
     Process,Exist, clash-win64.exe ;                         
     if ErrorLevel
@@ -282,21 +305,22 @@ MenuHandlerstartclash:
     {
         IniRead, configName, pref.ini, profile, configname, Default
         IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+        FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
+        If configSize
+            FileDelete, %A_ScriptDir%\Profile\pak_%configName%
+        else 
+        {
+            FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
+            TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
+        }
         If (%tapState% <> True And %tapState%<>true){
-            FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
-            If configSize
-                RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
-            else 
-                RunWait, %A_ScriptDir%\Bat\defaultstart.bat defaultconfig,,Hide
+            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
             goto, setsys
         }
-        else{
+        else
+        {
             gosub, StartTap
-            FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
-            If configSize
-                RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName%,,Hide
-            else 
-                RunWait, %A_ScriptDir%\Bat\defaultstart.bat tapdefault,,Hide
+            RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName%,,Hide
             goto, dissys
         } 
     }
@@ -339,6 +363,12 @@ Updateconfig:
     IniRead, subconverterName, pref.ini, own, sub, Default
     IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
     IniRead, configName, pref.ini, profile, configname, Default
+    FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
+    If configSize
+        {}
+    else
+        FileCopy, %A_ScriptDir%\Profile\defaultconfig\default.yaml, %A_ScriptDir%\Profile\%configName%, 1
+    FileCopy, %A_ScriptDir%\Profile\%configName%, %A_ScriptDir%\Profile\pak_%configName%, 1
     RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,Hide
     Goto, MenuHandlerrestartclash
 return
