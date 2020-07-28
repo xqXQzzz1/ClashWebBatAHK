@@ -14,7 +14,7 @@ Menu, Tray, NoStandard
 #Persistent ; 让脚本持续运行, 直到用户退出.
 Menu, tray, Add, 切换节点, OpenWebBoard 
 Menu, tray, Add, 更新配置, Updateconfig
-Menu, tray, Add, 选择配置, SetConfig
+Menu, tray, Add, 配置管理, SetConfig
 Menu, Tray, Add ; 创建分隔线.'
 
 Menu, Submenu, Add, 启动Clash, MenuHandlerstartclash
@@ -26,9 +26,6 @@ Menu, Submenu2, Add, 开启系统代理, setsys
 Menu, Submenu2, Add, 关闭系统代理, dissys
 Menu, tray, add, 系统代理, :Submenu2
 
-; Menu, Submenu3, Add, 选择配置, SetConfig
-; Menu, Submenu3, Add, 添加配置, Url
-; Menu, tray, add, 配置管理, :Submenu3
 
 Menu, Submenu4, Add, 启动TAP, MenuHandlerStartTap
 Menu, Submenu4, Add, 默认启动, defaultTap
@@ -291,7 +288,6 @@ checkclash:
     TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n当前配置：%configName%
     
 return
-
 
 MenuHandlerstartclash:
     Process,Exist, clash-win64.exe ;                         
