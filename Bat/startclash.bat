@@ -3,12 +3,13 @@ setlocal enabledelayedexpansion
 
 taskkill /IM clash-win64.exe /F /T>NUL 2>NUL
 set configname=%1
+set Selected=%2
 start /b .\App\clash-win64.exe -d .\Profile -f .\Profile\%configname%
 
 cd ./App
 
 set curLine=1
-for /f "tokens=*" %%i in ('type "..\Profile\selection\%configname%.dat" ^| cmdutils --useselected') do (
+for /f "tokens=*" %%i in ('type "..\Profile\selection\%Selected%" ^| cmdutils --useselected') do (
   if "!curLine!" == "1" (
     set group=%%i
     set curLine=2

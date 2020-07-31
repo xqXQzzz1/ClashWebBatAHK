@@ -26,7 +26,6 @@ Menu, Submenu2, Add, 开启系统代理, setsys
 Menu, Submenu2, Add, 关闭系统代理, dissys
 Menu, tray, add, 系统代理, :Submenu2
 
-
 Menu, Submenu4, Add, 启动TAP, MenuHandlerStartTap
 Menu, Submenu4, Add, 默认启动, defaultTap
 Menu, Submenu4, Add, 添加TAP, MenuHandlerAddTap
@@ -173,7 +172,7 @@ return
 SetConfig:
     Gui, Destroy
     Gui, Add, Text,, 双击应用或删除，右键单击打开配置文件
-    Gui, Add, ListView,w700 Multi AltSubmit gSelectConfigs, Name|Size (KB)|URL
+    Gui, Add, ListView,r10 w800 Multi AltSubmit gSelectConfigs, 名称|更新日期|大小|订阅地址
     Gui, Add, Button, Default w80, 添加
     Gui, Add, Button, xp+100 yp w80, 刷新
     Gui, Add, Button, xp+100 yp w80, 订阅转换
@@ -183,7 +182,12 @@ SetConfig:
         FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
         StringReplace, cUrl, oUrl, #
         StringReplace, cUrl, cUrl, %A_SPACE%
-        LV_Add("", A_LoopFileName, A_LoopFileSizeKB, cUrl) 
+        StringMid, monthmodi, A_LoopFileTimeModified, 5, 2
+        StringMid, datemodi, A_LoopFileTimeModified, 7, 2
+        StringMid, hourmodi, A_LoopFileTimeModified, 9, 2
+        StringMid, minmodi, A_LoopFileTimeModified, 11, 2
+        TimeModi = %monthmodi%/%datemodi% %hourmodi%:%minmodi%
+        LV_Add("", A_LoopFileName, TimeModi,A_LoopFileSizeKB, cUrl) 
     } 
     LV_ModifyCol() ; 根据内容自动调整每列的大小.
     LV_ModifyCol(2,"100 Integer") ; 为了进行排序, 指出列 2 是整数.
@@ -308,13 +312,13 @@ MenuHandlerstartclash:
             TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
         }
         If (%tapState% <> True And %tapState%<>true){
-            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
+            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName% %configName%.dat,,Hide
             goto, setsys
         }
         else
         {
             gosub, StartTap
-            RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName%,,Hide
+            RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName% tap_%configName%.dat,,Hide
             goto, dissys
         } 
     }
