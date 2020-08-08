@@ -18,6 +18,7 @@ Menu, tray, Add, 配置管理, SetConfig
 Menu, Tray, Add ; 创建分隔线.'
 
 Menu, Submenu, Add, 启动Clash, MenuHandlerstartclash
+Menu, Submenu, Add, 重载Clash, MenuHandlerrestartconfig
 Menu, Submenu, Add, 关闭Clash, MenuHandlerstopclash
 Menu, Submenu, Add, 重启Clash, MenuHandlerrestartclash
 Menu, tray, add, Clash, :Submenu 
@@ -357,6 +358,30 @@ MenuHandlerrestartclash:
     gosub, MenuHandlerstartclash
 return
 
+MenuHandlerrestartconfig:
+    IniRead, configName, pref.ini, profile, configname, Default
+    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
+    If configSize
+        FileDelete, %A_ScriptDir%\Profile\pak_%configName%
+    else 
+    {
+        FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
+        TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
+    }
+    If (%tapState% <> True And %tapState%<>true)
+    {
+        Run, %A_ScriptDir%\Bat\restartconfig.bat %configName%,,Hide
+        goto, setsys
+    }
+    else
+    {
+        gosub, StartTap
+        Run, %A_ScriptDir%\Bat\restartconfig.bat tap\tap_%configName%,,Hide
+        goto, dissys
+    } 
+return
+
 Updateconfig:
     IniRead, subconverterName, pref.ini, own, sub, Default
     IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
@@ -368,7 +393,8 @@ Updateconfig:
         FileCopy, %A_ScriptDir%\Profile\defaultconfig\default.yaml, %A_ScriptDir%\Profile\%configName%, 1
     FileCopy, %A_ScriptDir%\Profile\%configName%, %A_ScriptDir%\Profile\pak_%configName%, 1
     RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,Hide
-    Goto, MenuHandlerrestartclash
+    ; Goto, MenuHandlerrestartclash
+    goto, MenuHandlerrestartconfig
 return
 
 StartUp:
