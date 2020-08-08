@@ -1,6 +1,7 @@
 # ClashBatAHK
 
-subconverter请自行下载后复制到App文件夹里。
+直接下载
+
 在您的配置文件里请添加：
 external-ui: yacd
 
