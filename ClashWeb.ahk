@@ -371,13 +371,13 @@ MenuHandlerrestartconfig:
     }
     If (%tapState% <> True And %tapState%<>true)
     {
-        Run, %A_ScriptDir%\Bat\restartconfig.bat %configName%,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat %configName% %configName%.dat,,Hide
         goto, setsys
     }
     else
     {
         gosub, StartTap
-        Run, %A_ScriptDir%\Bat\restartconfig.bat tap\tap_%configName%,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tap\tap_%configName% tap_%configName%.dat,,Hide
         goto, dissys
     } 
 return
