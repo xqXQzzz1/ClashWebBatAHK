@@ -6,5 +6,4 @@
 #IP-CIDR
 #DST-PORT
 #SRT-PORT
-
-DOMAIN-SUFFIX,steam-chat.com
+#PROCESS-NAME

@@ -8,7 +8,4 @@
 #SRT-PORT
 #PROCESS-NAME
 
-DOMAIN-KEYWORD,jable
-DOMAIN-SUFFIX,hwcdn.net
-DOMAIN-SUFFIX,cdn77.org
-DOMAIN-KEYWORD,phncdn
+PROCESS-NAME,steamwebhelper.exe

@@ -6,7 +6,15 @@
 #IP-CIDR
 #DST-PORT
 #SRT-PORT
+#PROCESS-NAME
+
 DOMAIN,mp3pro.xyz
 DOMAIN,infocheats.net
 DOMAIN,pcbeta.com
 DOMAIN-KEYWORD,ohssr
+DOMAIN-KEYWORD,cutecloud
+DOMAIN-KEYWORD,duyaoss
+DOMAIN-KEYWORD,subsice
+DOMAIN,v2aky.com
+DOMAIN,gist.github.com
+DOMAIN,services.googleapis.cn
