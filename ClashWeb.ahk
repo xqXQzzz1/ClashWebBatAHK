@@ -200,7 +200,7 @@ SelectConfigs:
     if A_GuiEvent = DoubleClick
     {
         LV_GetText(NameText, A_EventInfo) ; 从行的第一个字段中获取文本.
-        LV_GetText(Urltext, A_EventInfo, 3)
+        LV_GetText(Urltext, A_EventInfo, 4)
         If (%A_EventInfo%<>0){
             MsgBox, 3,, "是"：应用当前配置并重启clash`n"否"：删除当前配置
             IfMsgBox, Yes
