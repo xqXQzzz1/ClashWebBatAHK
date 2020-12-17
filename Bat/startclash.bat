@@ -2,10 +2,11 @@ chcp 65001
 setlocal enabledelayedexpansion
 
 taskkill /IM clash-win64.exe /F /T>NUL 2>NUL
+taskkill /IM UnblockNeteaseMusic.exe /F /T>NUL 2>NUL
 set configname=%1
 set Selected=%2
 start /b .\App\clash-win64.exe -d .\Profile -f .\Profile\%configname%
-
+REM start /b .\App\UnblockNeteaseMusic.exe -p 2333
 cd ./App
 
 set curLine=1

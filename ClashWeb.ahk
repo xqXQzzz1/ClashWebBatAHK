@@ -36,6 +36,7 @@ Menu, Submenu4, Add, 取消TAP, MenuHandlerDeleteTap
 Menu, tray, add, TAP管理, :Submenu4 
 
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
+; Menu, Submenu1, Add, 添加规则, updategeoIP
 Menu, Submenu1, Add, IPIPgeoIP, updateipgeoIP
 Menu, Submenu1, Add, UWP设置, UWPProxy 
 Menu, Submenu1, Add, 开机启动, StartUp
@@ -50,17 +51,17 @@ Menu, Tray, Default, 检查状态
 Menu, Tray, Add ; 创建分隔线.
 
 OnClick: ;任务栏图标双击单击效果
-if !LastClick 
-{
-    LastClick := 1
-    LastTC := A_TickCount
-    SetTimer,SingleClickEvent,-200
-}
-else if (A_TickCount-LastTC<200)
-{
-    SetTimer,SingleClickEvent,off
-    gosub,DoubleClickEvent
-}
+    if !LastClick 
+    {
+        LastClick := 1
+        LastTC := A_TickCount
+        SetTimer,SingleClickEvent,-200
+    }
+    else if (A_TickCount-LastTC<200)
+    {
+        SetTimer,SingleClickEvent,off
+        gosub,DoubleClickEvent
+    }
 return
 
 SingleClickEvent:
@@ -76,6 +77,11 @@ return
 nothing:
 return
 
+; uploadquan:
+;     RunWait, %A_ScriptDir%\Bat\uploadquan.bat,,
+; return
+
+; *********About Tap *********
 MenuHandlerUninstallTap:
     gosub, DeleteTap
     FileGetSize, UninstallSize, C:\Program Files\TAP-Windows\Uninstall.exe, K
@@ -128,72 +134,83 @@ DeleteTap:
     FileDelete, Profile\selection\tap_%configname%.dat 
 return
 
-Url:
-    Gui, Sub:Destroy
-    Gui, Sub:Add, Text,, 订阅链接:
-    Gui, Sub:Add, Edit,w500 vsubUrl
-    Gui, Sub:Add, Text,, 配置名称:
-    Gui, Sub:Add, Edit,w500 vsubName
-    Gui, Sub:Add, Button, Default, 保存
-    Gui, Sub:Show,,clash配置添加
-return
+; *********about ConfigSet********
 
-SubGuiclose:
-    Gui, Sub:Destroy
-return
+; GuiClose:
+;     Gui, Destroy 
+; return
 
-SubButton保存:
-    Gui, Sub:Submit
-    If (subUrl <> "" And subName <> ""){
-        IniWrite, "%subUrl%", pref.ini, profile, currentUrl
-        IniWrite, %subName%.yaml, pref.ini, profile, configname
-    }
-    gosub, Updateconfig
-    Gui, Sub:Destroy
-return
-Button订阅转换:
-    Run, %A_ScriptDir%\Profile\sub-web\index.html
+SetConfig:
+    Gui, Destroy
+    Gui, Add, Text,, 双击配置文件进行下一步操作
+    Gui, Add, ListView,r10 w800 Multi AltSubmit gSelectConfigs, 名称|更新日期|大小|订阅地址
+    Gui, Add, Button, Default w80, 添加
+    Gui, Add, Button, xp+100 yp w80, 订阅转换
+    Gui, Add, Button, xp+100 yp w80, 打开目录
+    Loop, Profile\*.yaml
+    {
+        FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
+        cUrl := StrSplit(oUrl, ":http")
+        cUrl := cUrl[2]
+        cUrl := StrSplit(cUrl, "NicoNewBeee")
+        cUrl := cUrl[1]
+        cUrl = http%cUrl%
+        StringMid, monthmodi, A_LoopFileTimeModified, 5, 2
+        StringMid, datemodi, A_LoopFileTimeModified, 7, 2
+        StringMid, hourmodi, A_LoopFileTimeModified, 9, 2
+        StringMid, minmodi, A_LoopFileTimeModified, 11, 2
+        TimeModi = %monthmodi%/%datemodi% %hourmodi%:%minmodi%
+        LV_Add("", A_LoopFileName, TimeModi, A_LoopFileSizeKB, cUrl) 
+    } 
+    LV_ModifyCol() ; 根据内容自动调整每列的大小.
+    LV_ModifyCol(2,"100 Integer") ; 为了进行排序, 指出列 2 是整数.
+    ; 显示窗口并返回. 每当用户点击一行时脚本会发出通知.
+    Gui, Show
 return
 
 Button添加:
     Goto,Url
 return
 
+Url:
+    Gui, Destroy
+    Gui, Add, Text,, 订阅链接:
+    Gui, Add, Edit,w500 vsubUrl
+    Gui, Add, Text,, 配置名称，不支持中文(例如：nico):
+    Gui, Add, Edit,w500 vsubName
+    Gui, Add, Button, Default, 保存
+    Gui, Show
+return
+
+Button保存:
+    Gui, Submit
+    If (subUrl <> "" And subName <> ""){
+        Needle := ".yaml"
+        IfInString, subName, %Needle%
+        {
+
+        }
+        else
+        {
+            subName := subName ".yaml"
+        }
+        IniRead, subconverterName, pref.ini, own, sub, Default
+        RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subUrl%" %subName%,,
+        FileEncoding, UTF-8-RAW
+        FileRead, currentConfig, %A_ScriptDir%\Profile\%subName%
+        FileDelete, %A_ScriptDir%\Profile\%subName% 
+        FileAppend, #托管地址: , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW
+        FileAppend, %subUrl% , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW 
+        FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW
+        FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%subName%, UTF-8-RAW
+        currentConfig := ""
+        Gui, Destroy
+        goto, SetConfig
+    }
+return
+
 Button打开目录:
     Run, %A_ScriptDir%\Profile
-return
-Button刷新:
-    goto,SetConfig
-return
-
-GuiClose:
-    Gui, Destroy 
-return
-
-SetConfig:
-    Gui, Destroy
-    Gui, Add, Text,, 双击应用或删除，右键单击打开配置文件
-    Gui, Add, ListView,r10 w800 Multi AltSubmit gSelectConfigs, 名称|更新日期|大小|订阅地址
-    Gui, Add, Button, Default w80, 添加
-    Gui, Add, Button, xp+100 yp w80, 刷新
-    Gui, Add, Button, xp+100 yp w80, 订阅转换
-    Gui, Add, Button, xp+100 yp w80, 打开目录
-    Loop, Profile\*.yaml
-    {
-        FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
-        StringReplace, cUrl, oUrl, #
-        StringReplace, cUrl, cUrl, %A_SPACE%
-        StringMid, monthmodi, A_LoopFileTimeModified, 5, 2
-        StringMid, datemodi, A_LoopFileTimeModified, 7, 2
-        StringMid, hourmodi, A_LoopFileTimeModified, 9, 2
-        StringMid, minmodi, A_LoopFileTimeModified, 11, 2
-        TimeModi = %monthmodi%/%datemodi% %hourmodi%:%minmodi%
-        LV_Add("", A_LoopFileName, TimeModi,A_LoopFileSizeKB, cUrl) 
-    } 
-    LV_ModifyCol() ; 根据内容自动调整每列的大小.
-    LV_ModifyCol(2,"100 Integer") ; 为了进行排序, 指出列 2 是整数.
-    ; 显示窗口并返回. 每当用户点击一行时脚本会发出通知.
-    Gui, Show
 return
 
 SelectConfigs:
@@ -202,39 +219,109 @@ SelectConfigs:
         LV_GetText(NameText, A_EventInfo) ; 从行的第一个字段中获取文本.
         LV_GetText(Urltext, A_EventInfo, 4)
         If (%A_EventInfo%<>0){
-            MsgBox, 3,, "是"：应用当前配置并重启clash`n"否"：删除当前配置
-            IfMsgBox, Yes
-            {
-                IniWrite, %NameText%, pref.ini, profile, configname
-                IniWrite, %UrlText%, pref.ini, profile, currentUrl
-                MsgBox, 4,, 选中配置：%NameText%，是否重启clash？
-                IfMsgBox, No
-                return ; 如果选择 No, 脚本将会终止.
-                gosub, MenuHandlerrestartclash
-            }
-            IfMsgBox, No
-            {
-                MsgBox, 4,, 当前配置:%NameText%，是否删除
-                IfMsgBox, Yes
-                {
-                    FileDelete, %A_ScriptDir%\Profile\%NameText%
-                    FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
-                    FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
-                    FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
-                } 
-            }
-        }
-    } 
-    if A_GuiEvent = RightClick
-    {
-        LV_GetText(NameText, A_EventInfo) ; 从行的第一个字段中获取文本.
-        LV_GetText(Urltext, A_EventInfo, 3)
-        If (%A_EventInfo%<>0){
-            Run, open "%A_ScriptDir%\Profile\%NameText%"
+            Gui, Destroy
+            Gui, Add, Text,, 
+            Gui, Add, Text,, 
+            Gui, Add, Text,, 所选文件：%NameText% 
+            Gui, Add, Text,, 
+            Gui, Add, Text,, 
+            Gui, Add, Button, Default w80, 启动
+            ; Gui, Add, Button, xp+90 yp w80, 更新
+            Gui, Add, Button, xp+90 yp w80, 修改
+            Gui, Add, Button, xp+90 yp w80, 查看
+            Gui, Add, Button, xp+90 yp w80, 删除
+            Gui, Add, Button, xp+90 yp w80, 取消
+            Gui, Show
         }
     }
 return
 
+Button启动:
+    ;RunWait, ahksave.bat,,Hide  保存节点，暂不用
+    Gui, Submit
+    IniWrite, %NameText%, pref.ini, profile, configname
+    IniWrite, "%UrlText%", pref.ini, profile, currentUrl
+    goto, MenuHandlerrestartclash
+return
+
+Button修改:
+    Gui, Submit
+    Gui, Destroy
+    Gui, Add, Text,, 所选配置
+    Gui, Add,Edit, w500 va,%NameText%
+    Gui, Add, Text,, 订阅地址
+    Gui, Add,Edit, w500 vb,%Urltext%
+    Gui, Add, Button, Default w80, 确认修改
+    ; Gui, Add, Button, xp+90 yp w80, 订阅/转换
+    Gui, Add, Button, xp+90 yp w80, 取消
+    Gui, Show
+return
+
+Button确认修改:
+    Gui, Submit
+    Needle := ".yaml"
+    IfInString, a, %Needle%
+    {
+
+    }
+    else
+    {
+        a := a ".yaml"
+    }
+    IniRead, subconverterName, pref.ini, own, sub, Default
+    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%b%" %a%,,
+    FileEncoding, UTF-8-RAW
+    FileRead, currentConfig, %A_ScriptDir%\Profile\%a%
+    FileDelete, %A_ScriptDir%\Profile\%a% 
+    FileAppend, #托管地址: , %A_ScriptDir%\Profile\%a% , UTF-8-RAW 
+    FileAppend, %b% , %A_ScriptDir%\Profile\%a% , UTF-8-RAW
+    FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%a% , UTF-8-RAW
+    FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%a%, UTF-8-RAW
+    currentConfig := ""
+    Gui, Destroy
+    goto, SetConfig
+return
+
+Button删除:
+    Gui, Submit
+    IniRead, Nt, pref.ini, profile, configname
+    ; MsgBox, 0,, "%Nt%"`n所选配置:为当前配置，请更换当前配置`n"%NameText%"
+    If (Nt != NameText)
+    {
+        MsgBox, 4,, 所选配置:%NameText%，是否删除
+        IfMsgBox, Yes
+        {
+            FileDelete, %A_ScriptDir%\Profile\%NameText%
+            FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
+            FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
+            FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
+        } 
+
+    }
+    else
+    {
+        MsgBox, 0,, 所选配置:为当前配置，请更换当前配置
+        IfMsgBox, Yes
+        {
+            Gui, Destroy
+            goto, SetConfig
+        }
+    }
+    Gui, Destroy
+    goto, SetConfig
+return
+
+Button查看:
+    Gui, Submit
+    Run, open "%A_ScriptDir%\Profile\%NameText%"
+    goto,SetConfig
+return
+
+Button取消:
+    goto, SetConfig
+return
+
+; about *********
 UWPProxy:
     RunWait, %A_ScriptDir%\Bat\UWP.bat,,Hide
 return
@@ -250,15 +337,19 @@ updateipgeoIP:
 return
 
 setsys:
-    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    ; IniRead, tapState, pref.ini, profile, tapcurrentState, Default
     If (%tapState% <> True And %tapState%<>true){
+        ; Menu, Tray, Check,系统代理
         RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
+        ; IniWrite, True, pref.ini, profile, sysState
     }
     Goto, checkclash
 return
 
 dissys:
+    ; Menu, Tray, UnCheck,系统代理
     RunWait, %A_ScriptDir%\Bat\dissys.bat,,Hide
+    ; IniWrite, false, pref.ini, profile, sysState
     Goto, checkclash
 return
 
@@ -291,7 +382,7 @@ checkclash:
     }
     IniRead, configName, pref.ini, profile, configname, Default
     TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n当前配置：%configName%
-    
+
 return
 
 MenuHandlerstartclash:
@@ -392,8 +483,16 @@ Updateconfig:
     else
         FileCopy, %A_ScriptDir%\Profile\defaultconfig\default.yaml, %A_ScriptDir%\Profile\%configName%, 1
     FileCopy, %A_ScriptDir%\Profile\%configName%, %A_ScriptDir%\Profile\pak_%configName%, 1
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,Hide
-    ; Goto, MenuHandlerrestartclash
+    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,
+    ; currentConfig := FileRead("%A_ScriptDir%\Profile\%configName%")
+    FileEncoding, UTF-8-RAW
+    FileRead, currentConfig, %A_ScriptDir%\Profile\%configName%
+    FileDelete, %A_ScriptDir%\Profile\%configName% 
+    FileAppend, #托管地址: , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
+    FileAppend, %subconverterUrl% , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
+    FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
+    FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%configName%, UTF-8-RAW
+    currentConfig := ""
     goto, MenuHandlerrestartconfig
 return
 
@@ -416,7 +515,7 @@ OpenWebBoard:
         ClashVar := "关-❌"
         TrayTip % Format("📢打开失败📢"),Clash：%ClashVar%`n请先启动Clash
     }
-    
+
 return
 
 MenuHandlerexit:
