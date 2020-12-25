@@ -1,6 +1,6 @@
 chcp 65001
 setlocal enabledelayedexpansion
-taskkill /IM  subconverter.exe /F /T>NUL 2>NUL
+@REM taskkill /IM  subconverter.exe /F /T>NUL 2>NUL
 set outval=data
 set !outval!={"path": "%cd%\Profile\%~1"}
 set !outval!=!%outval%:\=\\!

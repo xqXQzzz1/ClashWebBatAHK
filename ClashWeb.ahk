@@ -35,6 +35,12 @@ Menu, Submenu4, Add, 取消默认, cancledefaultTap
 Menu, Submenu4, Add, 取消TAP, MenuHandlerDeleteTap
 Menu, tray, add, TAP管理, :Submenu4 
 
+Menu, Submenu5, Add, 启动TUN, MenuHandlerStartTun
+Menu, Submenu5, Add, 默认启动, defaultTun
+Menu, Submenu5, Add, 取消默认, cancledefaultTun
+Menu, Submenu5, Add, 取消TUN, MenuHandlerDeleteTun
+Menu, tray, add, TUN管理, :Submenu5 
+
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
 ; Menu, Submenu1, Add, 添加规则, updategeoIP
 Menu, Submenu1, Add, IPIPgeoIP, updateipgeoIP
@@ -80,6 +86,39 @@ return
 ; uploadquan:
 ;     RunWait, %A_ScriptDir%\Bat\uploadquan.bat,,
 ; return
+; *********About Tun *********
+MenuHandlerStartTun:
+    IniWrite, tun, pref.ini, profile, currentState
+    gosub, MenuHandlerrestartclash
+Return
+
+defaultTun:
+    IniWrite, tun, pref.ini, profile, defaultState
+    goto, MenuHandlerStartTun
+Return
+
+cancledefaultTun:
+    IniWrite, general, pref.ini, profile, defaultState
+    goto, MenuHandlerDeleteTun
+return
+
+MenuHandlerDeleteTun:
+    gosub, DeleteTun
+    goto, MenuHandlerrestartclash
+return
+
+StartTun:
+    IniWrite, tun, pref.ini, profile, currentState
+    IniRead, configName, pref.ini, profile, configname, Default
+    RunWait, %A_ScriptDir%\Bat\settunconfig.bat %configName%,,Hide
+return
+
+DeleteTun:
+    IniWrite, general, pref.ini, profile, currentState
+    IniRead, configName, pref.ini, profile, configname, Default 
+    FileDelete, Profile\tun\tun_%configname%
+    FileDelete, Profile\selection\tun_%configname%.dat 
+return
 
 ; *********About Tap *********
 MenuHandlerUninstallTap:
@@ -87,39 +126,39 @@ MenuHandlerUninstallTap:
     FileGetSize, UninstallSize, C:\Program Files\TAP-Windows\Uninstall.exe, K
     If UninstallSize
         RunWait, C:\Program Files\TAP-Windows\Uninstall.exe,,Hide
-    IniWrite, false, pref.ini, profile, tapdevState
+    IniWrite, False, pref.ini, profile, tapdevState
 return
 
 MenuHandlerAddTap:
     RunWait, %A_ScriptDir%\App\tap\add_tap_device.bat,,
-    IniWrite, true, pref.ini, profile, tapdevState
+    IniWrite, True, pref.ini, profile, tapdevState
 return
 
 defaultTap:
-    IniWrite, true, pref.ini, profile, defaulttap
+    IniWrite, tap, pref.ini, profile, defaultState
     goto, MenuHandlerStartTap
 return
 
 cancledefaultTap:
-    IniWrite, false, pref.ini, profile, defaulttap
+    IniWrite, general, pref.ini, profile, defaultState
     goto, MenuHandlerDeleteTap
 return
 
 MenuHandlerStartTap:
-    IniWrite, true, pref.ini, profile, tapcurrentState
+    IniWrite, tap, pref.ini, profile, currentState
     gosub, MenuHandlerrestartclash
 return
 
 MenuHandlerDeleteTap:
     gosub, DeleteTap
-    gosub, MenuHandlerrestartclash
+    goto, MenuHandlerrestartclash
 return
 
 StartTap:
-    IniWrite, true, pref.ini, profile, tapcurrentState
+    IniWrite, tap, pref.ini, profile, currentState
     IniRead, configName, pref.ini, profile, configname, Default
     IniRead, devstate, pref.ini, profile, tapdevState, Default
-    If (%devstate% <> True And %devstate%<>true){
+    If (devstate != True){
         gosub, MenuHandlerAddTap
     } 
     RunWait, %A_ScriptDir%\App\tap\tapstart.bat,,Hide
@@ -127,7 +166,7 @@ StartTap:
 return
 
 DeleteTap:
-    IniWrite, false, pref.ini, profile, tapcurrentState
+    IniWrite, general, pref.ini, profile, currentState
     IniRead, configName, pref.ini, profile, configname, Default 
     RunWait, %A_ScriptDir%\App\tap\tapstop.bat,,Hide
     FileDelete, Profile\tap\tap_%configname%
@@ -295,6 +334,8 @@ Button删除:
             FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
             FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
             FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
+            FileDelete, %A_ScriptDir%\Profile\selection\tun_%NameText%.dat
+            FileDelete, %A_ScriptDir%\Profile\tun\tun_%NameText%
         } 
 
     }
@@ -338,11 +379,12 @@ return
 
 setsys:
     ; IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-    If (%tapState% <> True And %tapState%<>true){
-        ; Menu, Tray, Check,系统代理
-        RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
-        ; IniWrite, True, pref.ini, profile, sysState
-    }
+    ; If (%tapState% <> True And %tapState%<>true){
+    ;     ; Menu, Tray, Check,系统代理
+    ;     RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
+    ;     ; IniWrite, True, pref.ini, profile, sysState
+    ; }
+    RunWait, %A_ScriptDir%\Bat\setsys.bat,,Hide
     Goto, checkclash
 return
 
@@ -372,16 +414,19 @@ checkclash:
     {
         ProxyVar := "关-❌"
     }
-    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-    If (%tapState% <> True And %tapState%<>true){
-        TapVar := "关-❌"
+    IniRead, State, pref.ini, profile, currentState, Default
+    If (State = "tap"){
+        TapVar := "Tap模式"
+    }
+    else if (State = "tun")
+    {
+        TapVar := "Tun模式"
     }
     else{
-        ; gosub, StartTap
-        TapVar := "开-✅"
+        TapVar := "常规模式"
     }
     IniRead, configName, pref.ini, profile, configname, Default
-    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`nTap 状态：%TapVar%`n当前配置：%configName%
+    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`n连接 模式：%TapVar%`n当前配置：%configName%
 
 return
 
@@ -394,7 +439,6 @@ MenuHandlerstartclash:
     else
     {
         IniRead, configName, pref.ini, profile, configname, Default
-        IniRead, tapState, pref.ini, profile, tapcurrentState, Default
         FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
         If configSize
             FileDelete, %A_ScriptDir%\Profile\pak_%configName%
@@ -403,16 +447,23 @@ MenuHandlerstartclash:
             FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
             TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
         }
-        If (%tapState% <> True And %tapState%<>true){
-            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName% %configName%.dat,,Hide
-            goto, setsys
-        }
-        else
-        {
+        IniRead, State, pref.ini, profile, currentState, Default
+        If (State = "tap"){
             gosub, StartTap
             RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName% tap_%configName%.dat,,Hide
             goto, dissys
+        }
+        else if (State = "tun")
+        {
+            gosub, StartTun
+            ; RunWait,*RunAs %A_ScriptDir%\Bat\startclash.bat tun\tun_%configName% tun_%configName%.dat,,Hide
+            RunWait,%A_ScriptDir%\Bat\startclash.bat tun\tun_%configName% tun_%configName%.dat,,Hide
+            goto, dissys
         } 
+        else{
+            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName% %configName%.dat,,Hide
+            goto, setsys
+        }
     }
 return
 
@@ -421,37 +472,49 @@ MenuHandlerstopclash:
     IfMsgBox, Yes
     {
         IniRead, configName, pref.ini, profile, configname, Default
-        IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-        If (%tapState% <> True And %tapState%<>true){
-            RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
-        }
-        else{
+        IniRead, State, pref.ini, profile, currentState, Default
+        If (State = "tap"){
             ; gosub, StartTap
             RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+        }
+        else if (State = "tun")
+        {
+            ; gosub, StartTun
+            RunWait, %A_ScriptDir%\Bat\stop.bat tun_%configName%,,Hide
         } 
-        IniRead, tapState1, pref.ini, profile, defaulttap, Default
-        If (%tapState1% <> True And %tapState1%<>true){
+        else{
+            RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
+        }
+        IniRead, dState, pref.ini, profile, defaultState, Default
+        If (dState != "tap"){
             gosub, DeleteTap
         }
-        IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
+        If (dState != "tun"){
+            gosub, DeleteTun
+        }
+        IniWrite, %dState%, pref.ini, profile, currentState 
     }
 return
 
 MenuHandlerrestartclash:
     IniRead, configName, pref.ini, profile, configname, Default
-    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-    If (%tapState% <> True And %tapState%<>true){
+    IniRead, State, pref.ini, profile, currentState, Default
+    If (State = "tap"){
+        RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+    }
+    else if (State = "tun")
+    {
+        RunWait, %A_ScriptDir%\Bat\stop.bat tun_%configName%,,Hide
+    } 
+    else{
         RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
     }
-    else{
-        RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
-    } 
-    gosub, MenuHandlerstartclash
+    goto, MenuHandlerstartclash
 return
 
 MenuHandlerrestartconfig:
     IniRead, configName, pref.ini, profile, configname, Default
-    IniRead, tapState, pref.ini, profile, tapcurrentState, Default
+    IniRead, State, pref.ini, profile, currentState, Default
     FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
     If configSize
         FileDelete, %A_ScriptDir%\Profile\pak_%configName%
@@ -460,17 +523,21 @@ MenuHandlerrestartconfig:
         FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
         TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
     }
-    If (%tapState% <> True And %tapState%<>true)
-    {
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat %configName% %configName%.dat,,Hide
-        goto, setsys
-    }
-    else
-    {
+    If (State = "tap"){
         gosub, StartTap
         RunWait, %A_ScriptDir%\Bat\restartconfig.bat tap\tap_%configName% tap_%configName%.dat,,Hide
         goto, dissys
+    }
+    else if (State = "tun")
+    {
+        gosub, StartTun
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,Hide
+        goto, dissys
     } 
+    else{
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat %configName% %configName%.dat,,Hide
+        goto, setsys
+    }
 return
 
 Updateconfig:
@@ -523,19 +590,25 @@ MenuHandlerexit:
     IfMsgBox, No
 return
 IniRead, configName, pref.ini, profile, configname, Default
-IniRead, tapState, pref.ini, profile, tapcurrentState, Default
-If (%tapState% <> True And %tapState%<>true){
+IniRead, State, pref.ini, profile, currentState, Default
+If (State = "tap"){
+    RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
+}
+else if (State = "tun")
+{
+    RunWait, %A_ScriptDir%\Bat\stop.bat tun_%configName%,,Hide
+} 
+else{
     RunWait, %A_ScriptDir%\Bat\stop.bat %configName%,,Hide
 }
-else{
-    ; gosub, StartTap
-    RunWait, %A_ScriptDir%\Bat\stop.bat tap_%configName%,,Hide
-} 
-IniRead, tapState1, pref.ini, profile, defaulttap, Default
-If (%tapState1% <> True And %tapState1%<>true){
+IniRead, dState, pref.ini, profile, defaultState, Default
+If (dState != "tap"){
     gosub, DeleteTap
 }
-IniWrite, %tapState1%, pref.ini, profile, tapcurrentState 
+If (dState != "tun"){
+    gosub, DeleteTun
+}
+IniWrite, %dState%, pref.ini, profile, currentState 
 Gosub, checkclash
 ExitApp
 
