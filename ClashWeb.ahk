@@ -531,7 +531,8 @@ MenuHandlerrestartconfig:
     else if (State = "tun")
     {
         gosub, StartTun
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,hide
+        ; gosub, MenuHandlerrestartclash
         goto, dissys
     } 
     else{
