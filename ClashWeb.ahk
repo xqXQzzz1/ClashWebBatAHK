@@ -1,4 +1,5 @@
-﻿if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
+﻿full_command_line := DllCall("GetCommandLine", "str")
+if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
 {
     try
     {
@@ -10,6 +11,7 @@
     ExitApp
 }
 
+SetWorkingDir %A_ScriptDir%
 Process,Exist, clash-win64.exe ;                         
 if ErrorLevel
 { 
@@ -542,7 +544,7 @@ MenuHandlerrestartconfig:
     else if (State = "tun")
     {
         gosub, StartTun
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,Hide
         ; gosub, MenuHandlerrestartclash
         goto, dissys
     } 
