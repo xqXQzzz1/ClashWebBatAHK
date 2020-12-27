@@ -3,6 +3,7 @@
 ## 直接下载，解压使用
 
 ## 在您的配置文件里请添加：
+    external-controller: 127.0.0.1:9090
     external-ui: yacd
 
 ## tun/tap模式
