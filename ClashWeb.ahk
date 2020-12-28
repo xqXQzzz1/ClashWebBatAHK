@@ -261,6 +261,10 @@ Button保存:
     }
 return
 
+Button订阅转换:
+    Run, %A_ScriptDir%\Bat\Subcon.bat,,Hide
+Return
+
 Button打开目录:
     Run, %A_ScriptDir%\Profile
 return
