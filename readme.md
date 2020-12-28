@@ -17,6 +17,11 @@
     subconverter：https://github.com/tindy2013/subconverter
 
 
+## 订阅转换：
+    在线接口的隐私问题自行斟酌，建议选择选择本地接口或自行搭建。
+    默认使用T大的订阅转换：https://subcon.py6.pw/
+    如果修改，请在Bat\Subcon.bat中修改地址。
+
 ## 感谢：
 
     clashcmd: https://github.com/tindy2013/clashcmd
