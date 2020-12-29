@@ -4,7 +4,7 @@
 
 ## 在您的配置文件里请添加：
     external-controller: 127.0.0.1:9090
-    <!-- external-ui: yacd -->
+    
     默认面板为yacd。如需修改请在Bat\OpenWeb.bat修改
 ## tun/tap模式
     Profile\defaultconfig中修改配置
