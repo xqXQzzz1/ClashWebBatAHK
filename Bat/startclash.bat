@@ -3,20 +3,13 @@ setlocal enabledelayedexpansion
 
 taskkill /IM clash-win64.exe /F /T>NUL 2>NUL
 taskkill /IM UnblockNeteaseMusic.exe /F /T>NUL 2>NUL
-set configname=%1
-set Selected=%2
-@REM CD /D %~DP0\..\
-start /b .\App\clash-win64.exe -d .\Profile -f .\Profile\%configname%
-REM start /b .\App\UnblockNeteaseMusic.exe -p 2333
-cd ./App
 
-set curLine=1
-for /f "tokens=*" %%i in ('type "..\Profile\selection\%Selected%" ^| cmdutils --useselected') do (
-  if "!curLine!" == "1" (
-    set group=%%i
-    set curLine=2
-  ) else (
-    echo %%i | curl -X PUT -s -o NUL -H "Content-Type: application/json;charset=UTF-8" --data-binary @- --no-buffer "http://127.0.0.1:9090/proxies/!group!"
-    set curLine=1
-  )
-)
+set outval=data
+set !outval!={"path": "%cd%\Profile\%~1"}
+set !outval!=!%outval%:\=\\!
+set !outval!=!%outval%:"=\"!
+set !outval!="!%outval%!"
+
+start /b .\App\clash-win64.exe -d .\Profile -f .\Profile\defaultconfig\default.yaml
+cd .\App
+curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs > message.json

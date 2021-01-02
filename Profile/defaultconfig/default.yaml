@@ -1,10 +1,10 @@
-mixed-port: 7890             
 #修改端口后，注意修改  /bat/setsys.bat的内容  sysproxy global 127.0.0.1:7890 localhost;127.*;10.*
+mixed-port: 7890             
 allow-lan: false
 mode: Rule
 log-level: info
-external-controller: '127.0.0.1:9090'
-external-ui: yacd     
+#请在此处修改 external-controller
+external-controller: '127.0.0.1:9090'    
 proxies:
   - name: 网易云解锁（本地）
     type: http
@@ -15,8 +15,9 @@ proxy-groups:
   - name: 🎵 Netease Music
     type: select
     proxies:
-      - 网易云解锁（本地）
       - DIRECT
+      - 网易云解锁（本地）
+
 rules:
   - DOMAIN,api.iplay.163.com,🎵 Netease Music
   - DOMAIN,apm3.music.163.com,🎵 Netease Music

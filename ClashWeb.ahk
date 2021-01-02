@@ -129,7 +129,6 @@ return
 DeleteTun:
     IniWrite, general, pref.ini, profile, currentState
     IniRead, configName, pref.ini, profile, configname, Default 
-    FileDelete, Profile\tun\tun_%configname%
     FileDelete, Profile\selection\tun_%configname%.dat 
 return
 
@@ -182,7 +181,6 @@ DeleteTap:
     IniWrite, general, pref.ini, profile, currentState
     IniRead, configName, pref.ini, profile, configname, Default 
     RunWait, %A_ScriptDir%\App\tap\tapstop.bat,,Hide
-    FileDelete, Profile\tap\tap_%configname%
     FileDelete, Profile\selection\tap_%configname%.dat 
 return
 
@@ -350,9 +348,8 @@ Button删除:
             FileDelete, %A_ScriptDir%\Profile\%NameText%
             FileDelete, %A_ScriptDir%\Profile\selection\%NameText%.dat
             FileDelete, %A_ScriptDir%\Profile\selection\tap_%NameText%.dat
-            FileDelete, %A_ScriptDir%\Profile\tap\tap_%NameText%
             FileDelete, %A_ScriptDir%\Profile\selection\tun_%NameText%.dat
-            FileDelete, %A_ScriptDir%\Profile\tun\tun_%NameText%
+            FileDelete, %A_ScriptDir%\Profile\providers
         } 
 
     }
@@ -443,7 +440,7 @@ checkclash:
         TapVar := "常规模式"
     }
     IniRead, configName, pref.ini, profile, configname, Default
-    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`n连接 模式：%TapVar%`n当前配置：%configName%
+    TrayTip % Format("📢运行状态📢"),Clash状态：%ClashVar%`n系统 代理：%ProxyVar%`n连接 模式：%TapVar%`n当前 配置：%configName%
 
 return
 
@@ -451,36 +448,44 @@ MenuHandlerstartclash:
     Process,Exist, clash-win64.exe ;                         
     if ErrorLevel
     { 
-        MsgBox, 4,, clash已启动！
+        MsgBox, 0,, clash已启动！
     }
     else
     {
         IniRead, configName, pref.ini, profile, configname, Default
-        FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
+        RunWait, %A_ScriptDir%\Bat\startclash.bat %configName%,,Hide
+        FileGetSize, configSize, %A_ScriptDir%\App\message.json,
         If configSize
-            FileDelete, %A_ScriptDir%\Profile\pak_%configName%
+        {
+            FileRead, Message, %A_ScriptDir%\App\message.json
+            MsgBox, 0, , %Message%`n请检查配置，已使用默认配置
+            Message := ""
+            FileDelete, %A_ScriptDir%\App\message.json
+        }
         else 
         {
-            FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
-            TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
+            IniRead, State, pref.ini, profile, currentState, Default
+            If (State = "tap"){
+                gosub, StartTap
+                RunWait, %A_ScriptDir%\Bat\restartconfig.bat tap_%configName%,,Hide
+                FileDelete, %A_ScriptDir%\Profile\tap_%configName%
+                FileDelete, %A_ScriptDir%\App\message.json
+                goto, dissys
+            }
+            else if (State = "tun")
+            {
+                gosub, StartTun
+                RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun_%configName%,,Hide
+                FileDelete, %A_ScriptDir%\Profile\tun_%configName%
+                FileDelete, %A_ScriptDir%\App\message.json
+                goto, dissys
+            } 
+            else{
+                FileDelete, %A_ScriptDir%\App\message.json
+                goto, setsys
+            }
         }
-        IniRead, State, pref.ini, profile, currentState, Default
-        If (State = "tap"){
-            gosub, StartTap
-            RunWait, %A_ScriptDir%\Bat\startclash.bat tap\tap_%configName% tap_%configName%.dat,,Hide
-            goto, dissys
-        }
-        else if (State = "tun")
-        {
-            gosub, StartTun
-            ; RunWait,*RunAs %A_ScriptDir%\Bat\startclash.bat tun\tun_%configName% tun_%configName%.dat,,Hide
-            RunWait,%A_ScriptDir%\Bat\startclash.bat tun\tun_%configName% tun_%configName%.dat,,Hide
-            goto, dissys
-        } 
-        else{
-            RunWait, %A_ScriptDir%\Bat\startclash.bat %configName% %configName%.dat,,Hide
-            goto, setsys
-        }
+
     }
 return
 
@@ -532,29 +537,58 @@ return
 MenuHandlerrestartconfig:
     IniRead, configName, pref.ini, profile, configname, Default
     IniRead, State, pref.ini, profile, currentState, Default
-    FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
-    If configSize
-        FileDelete, %A_ScriptDir%\Profile\pak_%configName%
-    else 
-    {
-        FileMove, %A_ScriptDir%\Profile\pak_%configName%, %A_ScriptDir%\Profile\%configName%, 1
-        TrayTip % Format("📢订阅失败📢"),已使用之前配置`n请检查订阅
-    }
     If (State = "tap"){
         gosub, StartTap
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tap\tap_%configName% tap_%configName%.dat,,Hide
-        goto, dissys
+        RunWait, %A_ScriptDir%\Bat\saveSelected.bat tap_%configName%,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tap_%configName%,,Hide
+        FileDelete, %A_ScriptDir%\Profile\tap_%configName%
+        FileGetSize, configSize, %A_ScriptDir%\App\message.json,
+        If configSize
+        {
+            FileRead, Message, %A_ScriptDir%\App\message.json
+            MsgBox, 0, , %Message%`n请检查配置，重载失败
+            Message := ""
+            FileDelete, %A_ScriptDir%\App\message.json
+        }
+        Else{
+            FileDelete, %A_ScriptDir%\App\message.json
+            goto, dissys
+        }
     }
     else if (State = "tun")
     {
         gosub, StartTun
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun\tun_%configName% tun_%configName%.dat,,Hide
-        ; gosub, MenuHandlerrestartclash
-        goto, dissys
+        RunWait, %A_ScriptDir%\Bat\saveSelected.bat tun_%configName%,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat tun_%configName%,,Hide
+        FileDelete, %A_ScriptDir%\Profile\tun_%configName%
+        FileGetSize, configSize, %A_ScriptDir%\App\message.json,
+        If configSize
+        {
+            FileRead, Message, %A_ScriptDir%\App\message.json
+            MsgBox, 0, , %Message%`n请检查配置，重载失败
+            Message := ""
+            FileDelete, %A_ScriptDir%\App\message.json
+        }
+        Else{
+            FileDelete, %A_ScriptDir%\App\message.json
+            goto, dissys
+        }
     } 
     else{
-        RunWait, %A_ScriptDir%\Bat\restartconfig.bat %configName% %configName%.dat,,Hide
-        goto, setsys
+        RunWait, %A_ScriptDir%\Bat\saveSelected.bat %configName%,,Hide
+        RunWait, %A_ScriptDir%\Bat\restartconfig.bat %configName%,,Hide
+        FileGetSize, configSize, %A_ScriptDir%\App\message.json,
+        If configSize
+        {
+            FileRead, Message, %A_ScriptDir%\App\message.json
+            MsgBox, 0, , %Message%`n请检查配置，重载失败
+            Message := ""
+            FileDelete, %A_ScriptDir%\App\message.json
+        }
+        Else{
+            FileDelete, %A_ScriptDir%\App\message.json
+            goto, setsys
+        }
     }
 return
 
@@ -562,14 +596,7 @@ Updateconfig:
     IniRead, subconverterName, pref.ini, own, sub, Default
     IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
     IniRead, configName, pref.ini, profile, configname, Default
-    FileGetSize, configSize, %A_ScriptDir%\Profile\%configName%, K
-    If configSize
-        {}
-    else
-        FileCopy, %A_ScriptDir%\Profile\defaultconfig\default.yaml, %A_ScriptDir%\Profile\%configName%, 1
-    FileCopy, %A_ScriptDir%\Profile\%configName%, %A_ScriptDir%\Profile\pak_%configName%, 1
     RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,
-    ; currentConfig := FileRead("%A_ScriptDir%\Profile\%configName%")
     FileEncoding, UTF-8-RAW
     FileRead, currentConfig, %A_ScriptDir%\Profile\%configName%
     FileDelete, %A_ScriptDir%\Profile\%configName% 

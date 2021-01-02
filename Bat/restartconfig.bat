@@ -9,12 +9,10 @@ set !outval!=!%outval%:"=\"!
 set !outval!="!%outval%!"
 
 cd .\App
-set Selected=%2
-curl -s http://127.0.0.1:9090/proxies | cmdutils --getselected > "..\Profile\selection\%Selected%"
-curl -s -X PUT -d !data! --write-out %%{http_code} http://127.0.0.1:9090/configs
+curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs > message.json
 
 set curLine=1
-for /f "tokens=*" %%i in ('type "..\Profile\selection\%Selected%" ^| cmdutils --useselected') do (
+for /f "tokens=*" %%i in ('type "..\Profile\selection\%~1.dat" ^| cmdutils --useselected') do (
   if "!curLine!" == "1" (
     set group=%%i
     set curLine=2
