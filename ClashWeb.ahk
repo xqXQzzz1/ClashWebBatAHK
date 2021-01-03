@@ -135,7 +135,7 @@ return
 ; *********About Tap *********
 MenuHandlerUninstallTap:
     gosub, DeleteTap
-    FileGetSize, UninstallSize, C:\Program Files\TAP-Windows\Uninstall.exe, K
+    FileGetSize, UninstallSize, C:\Program Files\TAP-Windows\Uninstall.exe, 
     If UninstallSize
         RunWait, C:\Program Files\TAP-Windows\Uninstall.exe,,Hide
     IniWrite, False, pref.ini, profile, tapdevState
@@ -291,11 +291,21 @@ SelectConfigs:
 return
 
 Button启动:
-    ;RunWait, ahksave.bat,,Hide  保存节点，暂不用
     Gui, Submit
+    ; IniRead, configName, pref.ini, profile, configname, Default
+    ; If (State = "tap"){
+    ;     RunWait, %A_ScriptDir%\Bat\saveSelected.bat tap_%configName%,,Hide
+    ; }
+    ; else if (State = "tun")
+    ; {
+    ;     RunWait, %A_ScriptDir%\Bat\saveSelected.bat tun_%configName%,,Hide
+    ; } 
+    ; else{
+    ;     RunWait, %A_ScriptDir%\Bat\saveSelected.bat %configName%,,Hide
+    ; }
     IniWrite, %NameText%, pref.ini, profile, configname
     IniWrite, "%UrlText%", pref.ini, profile, currentUrl
-    goto, MenuHandlerrestartclash
+    goto, MenuHandlerrestartconfig
 return
 
 Button修改:

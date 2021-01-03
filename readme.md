@@ -9,7 +9,7 @@
 ## tun/tap模式
     Profile\defaultconfig中修改配置
     
-    Tun模式请用管理打开ClashWeb.exe
+ <!-- Tun模式请用管理打开ClashWeb.exe -->
 
 ## 请自行更新：
     clash内核：https://github.com/Dreamacro/clash/releases/tag/premium
