@@ -304,7 +304,6 @@ Button启动:
     ;     RunWait, %A_ScriptDir%\Bat\saveSelected.bat %configName%,,Hide
     ; }
     IniWrite, %NameText%, pref.ini, profile, configname
-    IniWrite, "%UrlText%", pref.ini, profile, currentUrl
     goto, MenuHandlerrestartconfig
 return
 
@@ -342,8 +341,19 @@ Button确认修改:
     FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%a% , UTF-8-RAW
     FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%a%, UTF-8-RAW
     currentConfig := ""
-    Gui, Destroy
-    goto, SetConfig
+    IniRead, Nt, pref.ini, profile, configname
+    ; MsgBox, 0,, "%Nt%"`n所选配置:为当前配置，请更换当前配置`n"%NameText%"
+    If (Nt != NameText)
+    {
+        Gui, Destroy
+        goto, SetConfig
+    }
+    else
+    {
+        Gui, Destroy
+        goto, MenuHandlerrestartconfig
+    }
+
 return
 
 Button删除:
@@ -604,14 +614,19 @@ return
 
 Updateconfig:
     IniRead, subconverterName, pref.ini, own, sub, Default
-    IniRead, subconverterUrl, pref.ini, profile, currentUrl, Default
     IniRead, configName, pref.ini, profile, configname, Default
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subconverterUrl%" %configName%,,
+    FileReadLine, oUrl, %A_ScriptDir%\Profile\%configName%, 1
+    cUrl := StrSplit(oUrl, ":http")
+    cUrl := cUrl[2]
+    cUrl := StrSplit(cUrl, "NicoNewBeee")
+    cUrl := cUrl[1]
+    cUrl = http%cUrl%
+    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%cUrl%" %configName%,,
     FileEncoding, UTF-8-RAW
     FileRead, currentConfig, %A_ScriptDir%\Profile\%configName%
     FileDelete, %A_ScriptDir%\Profile\%configName% 
     FileAppend, #托管地址: , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
-    FileAppend, %subconverterUrl% , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
+    FileAppend, %cUrl% , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
     FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
     FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%configName%, UTF-8-RAW
     currentConfig := ""
