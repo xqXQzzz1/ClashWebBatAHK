@@ -43,3 +43,7 @@
 
 > Clash-Web-Bat：https://github.com/pcysanji/Clash-Web-Bat
 
+## 开机启动：
+> 不建议使用“开机启动"
+
+> 建议使用[UACWhitelistTool](https://github.com/XIU2/UACWhitelistTool)，将clashweb添加为不弹窗后，将生成的快捷文件放置到 C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp中
