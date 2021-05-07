@@ -1,4 +1,5 @@
 # ClashWebBatAHK
+> 已不再使用，建议使用原版clashweb。
 > 使用Bat脚本和cUrl取代ClashWeb所需的Python环境，部分操作没有跟进，使用方式请参考ClashWeb（链接见下）。
 
 <!-- ## 直接下载，解压使用 -->
