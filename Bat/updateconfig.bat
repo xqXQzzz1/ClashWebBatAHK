@@ -5,4 +5,5 @@ set URL=%2
 set configname=%3
 start /b .\App\subconverter\subconverter.exe -f .\App\subconverter\%subconverterName%
 cd .\App
-curl -o ..\Profile\%configname% %URL%
+curl --socks5 127.0.0.1:7890 -o ..\Profile\%configname% %URL%
+@REM curl  -o ..\Profile\%configname% %URL%

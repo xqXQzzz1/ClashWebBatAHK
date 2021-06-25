@@ -380,7 +380,7 @@ checkclash:
 return
 
 MenuHandlerstartclash:
-    Process,Exist, clash-win64.exe ;                         
+    Process,Exist, clash-win64.exe                      
     if ErrorLevel
     { 
         MsgBox, 0,, clash已启动！
@@ -498,28 +498,17 @@ Updateconfig:
     FileReadLine, oUrl, %A_ScriptDir%\Profile\%configName%, 1
     cUrl := StrSplit(oUrl, ":http")
     cUrl := cUrl[2]
-    cUrl := StrSplit(cUrl, "NicoNewBeee")
-    cUrl := cUrl[1]
     cUrl = http%cUrl%
     RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%cUrl%" %configName%,,
     FileEncoding, UTF-8-RAW
     FileRead, currentConfig, %A_ScriptDir%\Profile\%configName%
     FileDelete, %A_ScriptDir%\Profile\%configName% 
     FileAppend, #托管地址: , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
-    FileAppend, %cUrl% , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
-    FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
+    FileAppend, %cUrl%`n , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
     FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%configName%, UTF-8-RAW
     currentConfig := ""
     goto, MenuHandlerrestartconfig
 return
-
-StartUp:
-    RunWait, %A_ScriptDir%\Bat\StartUp.bat 
-return
-
-DeleteStartUp:
-    RunWait, %A_ScriptDir%\Bat\DeleteStartUp.bat 
-Return
 
 OpenWebBoard:
     Process,Exist, clash-win64.exe ; 
