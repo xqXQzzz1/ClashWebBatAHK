@@ -10,6 +10,6 @@ set !outval!=!%outval%:\=\\!
 set !outval!=!%outval%:"=\"!
 set !outval!="!%outval%!"
 
-start /b .\App\clash-win64.exe -d .\App -f .\Profile\defaultconfig\default.yaml
+start /b .\Profile\clash-win64.exe -d .\Profile -f .\Profile\defaultconfig\default.yaml
 cd .\App
-curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs > message.json
+curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs?force=false > message.json

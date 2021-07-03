@@ -46,6 +46,9 @@ Menu, Submenu5, Add, 取消默认, cancledefaultTun
 Menu, Submenu5, Add, 取消TUN, MenuHandlerDeleteTun
 Menu, tray, add, TUN管理, :Submenu5 
 
+
+Menu, Submenu1, Add, 查看IP, ShowIP
+Menu, Submenu1, Add, 默认端口, EditDef
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
 ; Menu, Submenu1, Add, 添加规则, updategeoIP
 Menu, Submenu1, Add, IPIPgeoIP, updateipgeoIP
@@ -330,6 +333,14 @@ updategeoIP:
     RunWait, %A_ScriptDir%\Bat\geoIP.bat
     Goto, MenuHandlerrestartclash
 return
+
+ShowIP:
+    RunWait, %A_ScriptDir%\Bat\ShowIP.bat
+Return
+
+EditDef:
+    Run, open "%A_ScriptDir%\Profile\defaultconfig\default.yaml"
+Return
 
 updateipgeoIP:
     RunWait, %A_ScriptDir%\Bat\ipipgeoIP.bat

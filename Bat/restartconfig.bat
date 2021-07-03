@@ -8,8 +8,15 @@ set !outval!=!%outval%:\=\\!
 set !outval!=!%outval%:"=\"!
 set !outval!="!%outval%!"
 
+@REM set outval1=data1
+@REM set !outval1!={"path": "%cd%\Profile\defaultconfig\default.yaml"}
+@REM set !outval1!=!%outval1%:\=\\!
+@REM set !outval1!=!%outval1%:"=\"!
+@REM set !outval1!="!%outval1%!"
+
 cd .\App
-curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs > message.json
+@REM curl -s -X PUT -d !data1!  http://127.0.0.1:9090/configs?force=true > message.json
+curl -s -X PUT -d !data!  http://127.0.0.1:9090/configs?force=false > message.json
 
 set curLine=1
 for /f "tokens=*" %%i in ('type "..\Profile\selection\%~1.dat" ^| cmdutils --useselected') do (

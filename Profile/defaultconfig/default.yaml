@@ -1,10 +1,15 @@
-#修改端口后，注意修改  /bat/setsys.bat的内容  sysproxy global 127.0.0.1:7890 localhost;127.*;10.*
-mixed-port: 7890             
+mixed-port: 7890 
+
 allow-lan: false
+
 mode: Rule
+
 log-level: info
 #请在此处修改 external-controller
-external-controller: '127.0.0.1:9090'    
+
+external-controller: '127.0.0.1:9090' 
+external-ui: yacd 
+
 proxies:
   - name: 网易云解锁（本地）
     type: http
