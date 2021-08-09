@@ -6,11 +6,7 @@
 > 使用Bat脚本和cUrl取代ClashWeb所需的Python环境，部分操作没有跟进，使用方式请参考ClashWeb.
 <!-- ## 直接下载，解压使用 -->
 
-## 在您的配置文件里请添加：
-> external-controller: 127.0.0.1:9090
-
-> 默认面板为yacd。如需修改请在Bat\OpenWeb.bat修改
-## tun/tap模式
+## tun模式
 > Profile\defaultconfig中修改配置
     
  <!-- Tun模式请用管理打开ClashWeb.exe -->
@@ -22,9 +18,9 @@
 
 > [subconverter](https://github.com/tindy2013/subconverter)
 
-> [wintun.dll](https://www.wintun.net/builds/wintun-0.10.zip)
+> [wintun.dll](https://www.wintun.net/)
 
-> [curl](https://curl.se/windows/)
+<!-- > [curl](https://curl.se/windows/) -->
 ## 订阅转换：
 > 在线接口的隐私问题自行斟酌，建议选择选择本地接口或自行搭建。
 
@@ -44,3 +40,5 @@
 
 > Clash-Web-Bat：https://github.com/pcysanji/Clash-Web-Bat
 
+## 其他
+> 不要用bieyongzhegemingzi_xiexie.yaml来命名自己的配置！

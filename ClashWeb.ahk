@@ -46,7 +46,6 @@ Menu, Submenu5, Add, 取消默认, cancledefaultTun
 Menu, Submenu5, Add, 取消TUN, MenuHandlerDeleteTun
 Menu, tray, add, TUN管理, :Submenu5 
 
-
 Menu, Submenu1, Add, 查看IP, ShowIP
 Menu, Submenu1, Add, 默认端口, EditDef
 Menu, Submenu1, Add, 原版geoIP, updategeoIP
@@ -132,7 +131,8 @@ return
 
 SetConfig:
     Gui, Destroy
-    Gui, Add, Text,, 双击配置文件进行下一步操作
+    IniRead, Nt, pref.ini, profile, configname
+    Gui, Add, Text,, 当前配置为：%Nt%，双击配置文件进行下一步操作
     Gui, Add, ListView,r10 w800 Multi AltSubmit gSelectConfigs, 名称|更新日期|大小|订阅地址
     Gui, Add, Button, Default w80, 添加
     Gui, Add, Button, xp+100 yp w80, 订阅转换
@@ -142,8 +142,6 @@ SetConfig:
         FileReadLine, oUrl, %A_ScriptDir%\Profile\%A_LoopFileName%, 1
         cUrl := StrSplit(oUrl, ":http")
         cUrl := cUrl[2]
-        cUrl := StrSplit(cUrl, "NicoNewBeee")
-        cUrl := cUrl[1]
         cUrl = http%cUrl%
         StringMid, monthmodi, A_LoopFileTimeModified, 5, 2
         StringMid, datemodi, A_LoopFileTimeModified, 7, 2
@@ -164,10 +162,10 @@ return
 
 Url:
     Gui, Destroy
-    Gui, Add, Text,, 订阅链接:
-    Gui, Add, Edit,w500 vsubUrl
     Gui, Add, Text,, 配置名称，不支持中文(例如：nico):
     Gui, Add, Edit,w500 vsubName
+    Gui, Add, Text,, 订阅链接:
+    Gui, Add, Edit,w500 vsubUrl
     Gui, Add, Button, Default, 保存
     Gui, Show
 return
@@ -185,18 +183,24 @@ Button保存:
             subName := subName ".yaml"
         }
         IniRead, subconverterName, pref.ini, own, sub, Default
-        RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subUrl%" %subName%,,
+        RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%subUrl%" bieyongzhegemingzi_xiexie.yaml,,
         FileEncoding, UTF-8-RAW
-        FileRead, currentConfig, %A_ScriptDir%\Profile\%subName%
-        FileDelete, %A_ScriptDir%\Profile\%subName% 
-        FileAppend, #托管地址: , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW
-        FileAppend, %subUrl% , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW 
-        FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%subName% , UTF-8-RAW
-        FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%subName%, UTF-8-RAW
-        currentConfig := ""
-        Gui, Destroy
-        goto, SetConfig
+        FileGetSize, configSize, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml,K
+        If configSize<1
+        {
+            MsgBox, 0, , 下载失败
+        }
+        else {
+            FileRead, currentConfig, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+            FileDelete, %A_ScriptDir%\Profile\%subName% 
+            FileAppend, #托管地址:%subUrl%`n, %A_ScriptDir%\Profile\%subName% , UTF-8-RAW
+            FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%subName%, UTF-8-RAW
+            currentConfig := ""
+            FileDelete, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+        }
     }
+    Gui, Destroy
+    goto, SetConfig
 return
 
 Button订阅转换:
@@ -251,28 +255,36 @@ return
 
 Button确认修改:
     Gui, Submit
-    Needle := ".yaml"
-    IfInString, a, %Needle%
-    {
+    If (a <> "" And b <> ""){
+        Needle := ".yaml"
+        IfInString, a, %Needle%
+        {
 
+        }
+        else
+        {
+            a := a ".yaml"
+        }
+        IniRead, subconverterName, pref.ini, own, sub, Default
+        RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%b%" bieyongzhegemingzi_xiexie.yaml,,
+        FileEncoding, UTF-8-RAW
+        FileGetSize, configSize, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml,K
+        If configSize<1
+        {
+            MsgBox, 0, , 下载失败
+        }
+        else {
+            FileRead, currentConfig, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+            FileDelete, %A_ScriptDir%\Profile\%a% 
+            FileAppend, #托管地址:%b%`n, %A_ScriptDir%\Profile\%a% , UTF-8-RAW
+            FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%a%, UTF-8-RAW
+            currentConfig := ""
+            FileDelete, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+        }
+        ; MsgBox, 0,, "%Nt%"`n所选配置:为当前配置，请更换当前配置`n"%NameText%"
     }
-    else
-    {
-        a := a ".yaml"
-    }
-    IniRead, subconverterName, pref.ini, own, sub, Default
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%b%" %a%,,
-    FileEncoding, UTF-8-RAW
-    FileRead, currentConfig, %A_ScriptDir%\Profile\%a%
-    FileDelete, %A_ScriptDir%\Profile\%a% 
-    FileAppend, #托管地址: , %A_ScriptDir%\Profile\%a% , UTF-8-RAW 
-    FileAppend, %b% , %A_ScriptDir%\Profile\%a% , UTF-8-RAW
-    FileAppend, NicoNewBeee的Clash控制台`n , %A_ScriptDir%\Profile\%a% , UTF-8-RAW
-    FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%a%, UTF-8-RAW
-    currentConfig := ""
     IniRead, Nt, pref.ini, profile, configname
-    ; MsgBox, 0,, "%Nt%"`n所选配置:为当前配置，请更换当前配置`n"%NameText%"
-    If (Nt != NameText)
+    If (Nt != a)
     {
         Gui, Destroy
         goto, SetConfig
@@ -280,9 +292,9 @@ Button确认修改:
     else
     {
         Gui, Destroy
+        gosub, SetConfig
         goto, MenuHandlerrestartconfig
     }
-
 return
 
 Button删除:
@@ -391,7 +403,7 @@ checkclash:
 return
 
 MenuHandlerstartclash:
-    Process,Exist, clash-win64.exe                      
+    Process,Exist, clash-win64.exe 
     if ErrorLevel
     { 
         MsgBox, 0,, clash已启动！
@@ -510,15 +522,22 @@ Updateconfig:
     cUrl := StrSplit(oUrl, ":http")
     cUrl := cUrl[2]
     cUrl = http%cUrl%
-    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%cUrl%" %configName%,,
+    RunWait, %A_ScriptDir%\Bat\updateconfig.bat %subconverterName% "%cUrl%" bieyongzhegemingzi_xiexie.yaml,,
     FileEncoding, UTF-8-RAW
-    FileRead, currentConfig, %A_ScriptDir%\Profile\%configName%
-    FileDelete, %A_ScriptDir%\Profile\%configName% 
-    FileAppend, #托管地址: , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
-    FileAppend, %cUrl%`n , %A_ScriptDir%\Profile\%configName% , UTF-8-RAW 
-    FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%configName%, UTF-8-RAW
-    currentConfig := ""
-    goto, MenuHandlerrestartconfig
+    FileGetSize, configSize, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml,K
+    If configSize<1
+    {
+        MsgBox, 0, , 下载失败
+    }
+    else {
+        FileRead, currentConfig, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+        FileDelete, %A_ScriptDir%\Profile\%configName% 
+        FileAppend, #托管地址:%cUrl%`n, %A_ScriptDir%\Profile\%configName% , UTF-8-RAW
+        FileAppend, %currentConfig%`n , %A_ScriptDir%\Profile\%configName%, UTF-8-RAW
+        currentConfig := ""
+        FileDelete, %A_ScriptDir%\Profile\bieyongzhegemingzi_xiexie.yaml
+        goto, MenuHandlerrestartconfig
+    }
 return
 
 OpenWebBoard:
